@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The GRC Field Manual — From First Principles to Platform Architecture</title>
+<style>
+  :root{
+    --paper: #FAF8F3;
+    --paper-raised: #FFFFFF;
+    --ink: #1C2430;
+    --ink-soft: #4A5568;
+    --ink-faint: #8A93A3;
+    --rule: #DDD6C8;
+    --teal: #2F6F6B;
+    --teal-deep: #1F4E4B;
+    --teal-wash: #E7F0EE;
+    --amber: #B9752C;
+    --amber-wash: #F7ECDC;
+    --red: #A6423A;
+    --red-wash: #F5E5E2;
+    --green: #3E7A4C;
+    --green-wash: #E6EFE7;
+    --code-bg: #1C2430;
+    --code-fg: #E7E2D3;
+    --serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+    --sans: "IBM Plex Sans", "Segoe UI", -apple-system, sans-serif;
+    --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+    --maxw: 760px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16.5px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a { color:var(--teal-deep); text-decoration-color: var(--rule); text-underline-offset:3px; }
+  a:hover { text-decoration-color: var(--teal-deep); }
+
+  ::selection{ background: var(--teal-wash); }
+
+  /* ---------- Layout shell ---------- */
+  .shell{
+    display:grid;
+    grid-template-columns: 280px 1fr;
+    min-height:100vh;
+  }
+
+  nav.toc{
+    position:sticky; top:0; align-self:start;
+    height:100vh; overflow-y:auto;
+    border-right:1px solid var(--rule);
+    background: var(--paper-raised);
+    padding: 28px 22px 60px;
+  }
+  nav.toc .brand{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:1.05rem;
+    letter-spacing:.2px;
+    margin-bottom:2px;
+    color:var(--ink);
+  }
+  nav.toc .brand-sub{
+    font-family:var(--mono);
+    font-size:.68rem;
+    color:var(--ink-faint);
+    margin-bottom:26px;
+    display:block;
+  }
+  nav.toc ol{
+    list-style:none; margin:0; padding:0;
+    counter-reset: chapter;
+  }
+  nav.toc > ol > li{
+    counter-increment: chapter;
+    margin-bottom:3px;
+  }
+  nav.toc a{
+    display:flex;
+    gap:10px;
+    font-size:.855rem;
+    color:var(--ink-soft);
+    text-decoration:none;
+    padding:6px 8px;
+    border-radius:4px;
+    line-height:1.35;
+  }
+  nav.toc a::before{
+    content: counter(chapter, decimal-leading-zero);
+    font-family:var(--mono);
+    font-size:.72rem;
+    color:var(--ink-faint);
+    flex-shrink:0;
+    padding-top:1px;
+  }
+  nav.toc a:hover{ background:var(--teal-wash); color:var(--teal-deep); }
+  nav.toc .toc-group-label{
+    font-family:var(--mono);
+    font-size:.66rem;
+    color:var(--ink-faint);
+    margin:22px 0 8px 8px;
+  }
+
+  main{ padding: 0; min-width:0; }
+
+  .hero{
+    padding: 88px 48px 70px;
+    border-bottom:1px solid var(--rule);
+    max-width: 980px;
+  }
+  .hero .kicker{
+    font-family:var(--mono);
+    font-size:.78rem;
+    color:var(--teal-deep);
+    margin-bottom:18px;
+  }
+  .hero h1{
+    font-family:var(--serif);
+    font-size: 3.1rem;
+    line-height:1.08;
+    margin:0 0 22px;
+    font-weight:600;
+    max-width: 14ch;
+  }
+  .hero p.lede{
+    font-size:1.15rem;
+    color:var(--ink-soft);
+    max-width:58ch;
+    margin:0 0 28px;
+  }
+  .hero .who{
+    display:flex; gap:28px; flex-wrap:wrap;
+    margin-top: 34px;
+  }
+  .who-item{ max-width:220px; }
+  .who-item .lvl{
+    font-family:var(--mono); font-size:.7rem; color:var(--teal-deep);
+    text-transform:uppercase; letter-spacing:.04em;
+  }
+  .who-item p{ margin:6px 0 0; font-size:.88rem; color:var(--ink-soft); }
+
+  section.chapter{
+    padding: 64px 48px;
+    max-width: 980px;
+    border-bottom:1px solid var(--rule);
+  }
+  section.chapter:last-of-type{ border-bottom:none; }
+
+  .chapter-head{
+    display:flex; align-items:baseline; gap:16px;
+    margin-bottom: 8px;
+  }
+  .chapter-num{
+    font-family:var(--mono);
+    font-size:.85rem;
+    color:var(--teal-deep);
+    border:1px solid var(--teal-deep);
+    border-radius:3px;
+    padding:2px 8px;
+  }
+  .chapter h2{
+    font-family:var(--serif);
+    font-size:2.1rem;
+    font-weight:600;
+    margin:0;
+    color:var(--ink);
+  }
+  .chapter .dek{
+    color:var(--ink-soft);
+    font-size:1.05rem;
+    max-width: var(--maxw);
+    margin: 10px 0 36px;
+  }
+
+  .prose{ max-width: var(--maxw); }
+  .prose p{ margin: 0 0 18px; }
+  .prose h3{
+    font-family:var(--serif);
+    font-size:1.4rem;
+    margin: 40px 0 14px;
+    font-weight:600;
+  }
+  .prose h4{
+    font-family:var(--sans);
+    font-size:1rem;
+    font-weight:700;
+    margin:28px 0 10px;
+    color:var(--teal-deep);
+  }
+  .prose ul, .prose ol{ margin:0 0 18px; padding-left: 22px; }
+  .prose li{ margin-bottom:7px; }
+  .prose strong{ color:var(--ink); }
+  code{
+    font-family:var(--mono);
+    background:var(--teal-wash);
+    color:var(--teal-deep);
+    padding:1px 5px;
+    border-radius:3px;
+    font-size:.88em;
+  }
+
+  /* ---------- callout boxes ---------- */
+  .box{
+    max-width: var(--maxw);
+    border-radius:6px;
+    padding:20px 22px;
+    margin: 26px 0;
+    border:1px solid var(--rule);
+    background: var(--paper-raised);
+  }
+  .box .box-label{
+    font-family:var(--mono);
+    font-size:.7rem;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    margin-bottom:9px;
+    display:block;
+  }
+  .box p:last-child{ margin-bottom:0; }
+  .box.example{ border-left:4px solid var(--teal); }
+  .box.example .box-label{ color: var(--teal-deep); }
+  .box.watch{ border-left:4px solid var(--amber); background:var(--amber-wash); }
+  .box.watch .box-label{ color:var(--amber); }
+  .box.senior{ border-left:4px solid var(--red); }
+  .box.senior .box-label{ color:var(--red); }
+  .box.junior{ border-left:4px solid var(--green); }
+  .box.junior .box-label{ color:var(--green-wash); color:var(--green);}
+
+  /* ---------- flow diagrams (css based) ---------- */
+  .flow{
+    display:flex; align-items:center; flex-wrap:wrap; gap:0;
+    margin: 30px 0; max-width: var(--maxw);
+  }
+  .flow .node{
+    background: var(--paper-raised);
+    border:1.5px solid var(--ink);
+    border-radius:6px;
+    padding:12px 16px;
+    font-size:.85rem;
+    text-align:center;
+    line-height:1.3;
+    min-width: 120px;
+  }
+  .flow .node .t{ font-weight:700; }
+  .flow .node .s{ display:block; font-size:.72rem; color:var(--ink-soft); margin-top:3px; }
+  .flow .node.accent{ border-color:var(--teal-deep); background:var(--teal-wash); }
+  .flow .node.warn{ border-color:var(--amber); background:var(--amber-wash); }
+  .flow .node.risk{ border-color:var(--red); background:var(--red-wash); }
+  .flow .arrow{
+    font-family:var(--mono);
+    color:var(--ink-faint);
+    padding: 0 10px;
+    font-size:1.1rem;
+  }
+  .flow.vertical{ flex-direction:column; align-items:flex-start; }
+  .flow.vertical .arrow{ padding: 4px 0 4px 20px; }
+  .flow.wrap-tight .node{ min-width:auto; }
+
+  .grid-cards{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    gap:14px; max-width: var(--maxw); margin: 24px 0;
+  }
+  .card{
+    border:1px solid var(--rule); border-radius:6px;
+    padding:16px 18px; background:var(--paper-raised);
+  }
+  .card h5{ margin:0 0 6px; font-size:.95rem; font-family:var(--serif); }
+  .card p{ margin:0; font-size:.85rem; color:var(--ink-soft); }
+
+  table.matrix{
+    border-collapse:collapse; margin:24px 0; max-width:var(--maxw); font-size:.85rem;
+  }
+  table.matrix th, table.matrix td{
+    border:1px solid var(--rule); padding:8px 12px; text-align:center;
+  }
+  table.matrix th{ background:var(--paper); font-family:var(--mono); font-size:.72rem; }
+  .sev-1{ background:var(--green-wash); }
+  .sev-2{ background:#F3F0DC; }
+  .sev-3{ background:var(--amber-wash); }
+  .sev-4{ background:#F3DAC9; }
+  .sev-5{ background:var(--red-wash); }
+
+  table.plain{ border-collapse:collapse; width:100%; max-width:var(--maxw); margin:20px 0; font-size:.88rem; }
+  table.plain th, table.plain td{ padding:9px 12px; border-bottom:1px solid var(--rule); text-align:left; vertical-align:top; }
+  table.plain th{ font-family:var(--mono); font-size:.7rem; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-faint); font-weight:600;}
+
+  .pill{
+    display:inline-block; font-family:var(--mono); font-size:.7rem;
+    padding:2px 9px; border-radius:99px; border:1px solid currentColor;
+  }
+  .pill.risk{ color:var(--red); }
+  .pill.control{ color:var(--teal-deep); }
+  .pill.policy{ color:var(--amber); }
+  .pill.ok{ color:var(--green); }
+
+  .quote-role{
+    display:flex; gap:16px; align-items:flex-start;
+    max-width: var(--maxw); margin: 20px 0;
+    background:var(--paper-raised); border:1px solid var(--rule); border-radius:8px;
+    padding:18px 20px;
+  }
+  .quote-role .avatar{
+    width:38px; height:38px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--serif); font-weight:700; color:#fff; font-size:1rem;
+  }
+  .quote-role .role{ font-weight:700; font-size:.82rem; margin-bottom:4px;}
+  .quote-role .role span{ font-weight:400; color:var(--ink-faint); font-family:var(--mono); font-size:.72rem;}
+  .quote-role p{ margin:0; font-size:.92rem; color:var(--ink-soft); }
+
+  /* relationship graph svg */
+  .diagram-wrap{
+    max-width: 100%;
+    overflow-x:auto;
+    margin: 30px 0;
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    border-radius:8px;
+    padding: 24px;
+  }
+  .diagram-wrap svg{ display:block; margin:0 auto; }
+  .diagram-caption{
+    font-family:var(--mono); font-size:.72rem; color:var(--ink-faint);
+    text-align:center; margin-top:10px;
+  }
+
+  .glossary-item{
+    max-width:var(--maxw);
+    padding: 16px 0; border-bottom:1px solid var(--rule);
+  }
+  .glossary-item dt{
+    font-family:var(--serif); font-weight:700; font-size:1.02rem; color:var(--ink);
+  }
+  .glossary-item dd{ margin:6px 0 0; color:var(--ink-soft); font-size:.9rem; }
+
+  .roadmap-row{
+    display:grid; grid-template-columns: 140px 1fr; gap:24px;
+    max-width:var(--maxw); padding:22px 0; border-bottom:1px solid var(--rule);
+  }
+  .roadmap-row .stage{ font-family:var(--serif); font-weight:700; font-size:1.1rem; color:var(--teal-deep); }
+  .roadmap-row .stage .yrs{ display:block; font-family:var(--mono); font-size:.72rem; color:var(--ink-faint); font-weight:400; margin-top:4px;}
+
+  footer.end{
+    padding: 60px 48px 100px; max-width:980px;
+    color:var(--ink-faint); font-size:.85rem;
+  }
+
+  @media (max-width: 880px){
+    .shell{ grid-template-columns: 1fr; }
+    nav.toc{ position:static; height:auto; }
+    .hero, section.chapter, footer.end{ padding: 40px 22px; }
+    .hero h1{ font-size:2.2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<nav class="toc">
+  <div class="brand">The GRC Field Manual</div>
+  <span class="brand-sub">FROM FIRST PRINCIPLES TO PLATFORM ARCHITECTURE</span>
+  <ol>
+    <li><a href="#ch1">Why this software exists</a></li>
+    <li><a href="#ch2">The core mental model</a></li>
+    <li><a href="#ch3">Organizational context</a></li>
+    <li><a href="#ch4">Risk management</a></li>
+    <li><a href="#ch5">Compliance management</a></li>
+    <li><a href="#ch6">Controls</a></li>
+    <li><a href="#ch7">Policies</a></li>
+    <li><a href="#ch8">Exceptions</a></li>
+    <li><a href="#ch9">Projects &amp; findings</a></li>
+    <li><a href="#ch10">Data privacy</a></li>
+    <li><a href="#ch11">Incident management</a></li>
+    <li><a href="#ch12">Business continuity</a></li>
+    <li><a href="#ch13">Third-party risk</a></li>
+    <li><a href="#ch14">Security awareness</a></li>
+    <li><a href="#ch15">Access reviews</a></li>
+    <li><a href="#ch16">Platform mechanics</a></li>
+    <li><a href="#ch17">The full graph</a></li>
+    <li><a href="#ch18">A day in the life</a></li>
+    <li><a href="#ch19">Glossary</a></li>
+    <li><a href="#ch20">Career roadmap</a></li>
+  </ol>
+</nav>
+
+<main>
+
+  <div class="hero">
+    <span class="kicker">A COMPLETE, WORKED-EXAMPLE CURRICULUM</span>
+    <h1>Governance, Risk &amp; Compliance, taught like nobody assumed you already knew it.</h1>
+    <p class="lede">This is the manual for the first day someone hands you a login to a GRC platform and says "go set up our risk register." No jargon left unexplained, no module left un-related to the ones around it — every concept is built from a plain-language reason it exists, then shown with a running example company, then connected to the concepts on either side of it.</p>
+    <div class="who">
+      <div class="who-item">
+        <div class="lvl">If you're new</div>
+        <p>Read chapters 1–2 twice. They are the skeleton everything else hangs on.</p>
+      </div>
+      <div class="who-item">
+        <div class="lvl">If you're mid-level</div>
+        <p>Chapters 3–16 are your module-by-module reference — read the ones you touch daily first.</p>
+      </div>
+      <div class="who-item">
+        <div class="lvl">If you're senior</div>
+        <p>Chapter 17 (the full graph) and chapter 20 (the roadmap) are written for you.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== CHAPTER 1 ===================== -->
+  <section class="chapter" id="ch1">
+    <div class="chapter-head"><span class="chapter-num">01</span><h2>Why this software exists</h2></div>
+    <p class="dek">Before you learn a single module name, you need to understand the problem GRC software is solving. Everything else in this manual is just this idea, applied to different flavors of the same question.</p>
+
+    <div class="prose">
+      <p>Imagine you run a company. You store customer data, you have employees, you use cloud vendors, and you want to sell your product to bigger and bigger customers. At some point, one of these things happens to you:</p>
+      <ul>
+        <li>A big customer's procurement team asks: <em>"Are you SOC 2 certified? Send us your security questionnaire."</em></li>
+        <li>A regulator asks: <em>"Show us your risk register and evidence that you manage access to personal data."</em></li>
+        <li>Your own board asks: <em>"What are our top five risks, and what are we doing about them?"</em></li>
+        <li>You get breached, and afterward everyone asks: <em>"Did we know about this weakness beforehand? Who owned it? Why wasn't it fixed?"</em></li>
+      </ul>
+      <p>Every one of these is really the same question wearing a different hat: <strong>"Can you prove — with evidence, not just a promise — that you know what could go wrong, and that you are actively managing it?"</strong></p>
+
+      <p>Before software like this existed, companies answered that question with a folder of Word documents, a risk register in Excel that one person updates twice a year, and a scramble every time an auditor visits. That approach breaks down for very predictable reasons:</p>
+
+      <div class="grid-cards">
+        <div class="card"><h5>Nothing is linked</h5><p>The spreadsheet says "we have a firewall," but nothing ties that fact to the specific law or contract clause it's supposed to satisfy.</p></div>
+        <div class="card"><h5>Nothing decays visibly</h5><p>A control that worked in January can silently stop working in June, and nobody notices until the audit in December.</p></div>
+        <div class="card"><h5>No one owns anything</h5><p>Risks get created in a meeting and then belong to nobody, so they never get revisited.</p></div>
+        <div class="card"><h5>Proof is scattered</h5><p>Evidence lives in individual inboxes, screenshots, and Slack threads instead of one retrievable place.</p></div>
+      </div>
+
+      <p>A <strong>GRC platform</strong> (Governance, Risk, Compliance) is a piece of software built to fix exactly those four problems. At its core, it is:</p>
+
+      <div class="box example">
+        <span class="box-label">Plain-language definition</span>
+        <p>A structured database, plus a set of workflows, for tracking <strong>what could go wrong</strong>, <strong>what you're doing about it</strong>, and <strong>proof that you actually did it</strong> — with everything cross-linked, so that when one thing changes, everything connected to it updates too.</p>
+      </div>
+
+      <h3>Breaking down the three letters</h3>
+      <p>"GRC" gets thrown around as one word, but it's genuinely three separate disciplines that the software happens to combine, because in practice they constantly feed into each other.</p>
+
+      <table class="plain">
+        <tr><th>Letter</th><th>What it actually means</th><th>Example question it answers</th></tr>
+        <tr><td><strong>Governance</strong></td><td>The rules, roles, and decision-making structure your company has set up for itself.</td><td>"Who is allowed to approve a new vendor? What's our official password policy?"</td></tr>
+        <tr><td><strong>Risk</strong></td><td>Identifying and scoring things that could hurt the business, and deciding how to respond.</td><td>"How likely is it that our customer database gets breached, and how bad would that be?"</td></tr>
+        <tr><td><strong>Compliance</strong></td><td>Proving you meet external obligations — laws, regulations, contracts, industry standards.</td><td>"Do we satisfy ISO 27001 clause A.5.15? Can we prove it to an auditor?"</td></tr>
+      </table>
+
+      <p>Notice they're not independent. A <strong>governance</strong> decision (our password policy requires MFA) becomes the answer to a <strong>risk</strong> (unauthorized account access) and simultaneously satisfies a <strong>compliance</strong> requirement (SOC 2 CC6.1). One real-world fact, three different lenses. That overlap is the entire reason GRC software exists as a single connected product instead of three separate spreadsheets.</p>
+
+      <div class="box junior">
+        <span class="box-label">For the fresh grad</span>
+        <p>You do not need to memorize acronyms yet. You need to internalize one sentence: <strong>"one fact about the business, viewed from three angles."</strong> Everything you'll learn in this manual is a more detailed version of that sentence.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 2 ===================== -->
+  <section class="chapter" id="ch2">
+    <div class="chapter-head"><span class="chapter-num">02</span><h2>The core mental model</h2></div>
+    <p class="dek">Almost every screen you will ever click on in a GRC platform is a variation of one seven-step chain. Learn this chain and every module in this manual will feel like a dialect of a language you already speak.</p>
+
+    <div class="prose">
+      <p>Here is the chain, in order:</p>
+
+      <div class="flow vertical">
+        <div class="node accent"><span class="t">1. Business Context</span><span class="s">who we are, what we own, who we work with</span></div>
+        <div class="arrow">↓ exposes</div>
+        <div class="node risk"><span class="t">2. Problem</span><span class="s">a risk, a compliance gap, a data exposure</span></div>
+        <div class="arrow">↓ addressed by</div>
+        <div class="node accent"><span class="t">3. Solution</span><span class="s">a control, a policy, a project, an exception</span></div>
+        <div class="arrow">↓ carried out as</div>
+        <div class="node"><span class="t">4. Operation</span><span class="s">someone actually does the thing, on a schedule</span></div>
+        <div class="arrow">↓ produces</div>
+        <div class="node"><span class="t">5. Evidence</span><span class="s">proof it happened — a screenshot, a log, a signature</span></div>
+        <div class="arrow">↓ rolls up into</div>
+        <div class="node warn"><span class="t">6. Status</span><span class="s">pass/fail, healthy/at-risk, compliant/non-compliant</span></div>
+        <div class="arrow">↓ propagates back to</div>
+        <div class="node risk"><span class="t">7. Risk &amp; Compliance posture</span><span class="s">the number your board actually sees</span></div>
+      </div>
+
+      <p>Let's make this concrete immediately, with a single running example company we'll use for the rest of this manual: <strong>Acme Corp</strong>, a 90-person SaaS company that stores customer data and is trying to close bigger enterprise deals.</p>
+
+      <div class="box example">
+        <span class="box-label">Worked example — the chain, once, start to finish</span>
+        <p><strong>1. Context:</strong> Acme has an asset called "Customer Database."</p>
+        <p><strong>2. Problem:</strong> Someone identifies a risk: "Unauthorized access to the Customer Database." It's scored as high severity.</p>
+        <p><strong>3. Solution:</strong> Acme decides the response is a <strong>Control</strong>: "MFA is enforced for all database access."</p>
+        <p><strong>4. Operation:</strong> Every quarter, someone actually checks: are all privileged accounts still using MFA?</p>
+        <p><strong>5. Evidence:</strong> They export the list of accounts and their MFA status from the identity provider, and attach it.</p>
+        <p><strong>6. Status:</strong> The check passes. The control is marked "Healthy" this quarter.</p>
+        <p><strong>7. Posture:</strong> Because the control is healthy, the risk's <em>residual</em> score drops from "high" to "low," and — because this same control also satisfies a SOC 2 requirement — that requirement shows as "met" on the compliance dashboard too.</p>
+      </div>
+
+      <p>That's it. That is, structurally, <strong>the entire content of this manual</strong>. Every module you'll learn — Risks, Controls, Policies, Vendors, Incidents, Access Reviews, Business Continuity — is this same seven-step chain, just starting from a different kind of "Problem" in step 2.</p>
+
+      <h3>Why the arrows matter more than the boxes</h3>
+      <p>A junior mistake is to think of a GRC platform as "seven separate lists you fill in." The actual value is in the <strong>arrows</strong> — the links between boxes. A risk that isn't linked to any control is just an anxious sentence in a database. A control that isn't linked to any risk or requirement is just busywork nobody can explain the point of. The skill you are building, chapter by chapter, is: <em>knowing which box to link to which other box, and why.</em></p>
+
+      <div class="box watch">
+        <span class="box-label">Common misunderstanding</span>
+        <p>People assume "Risk score went down" means "we fixed the underlying problem." It doesn't. It means <strong>our control is currently passing its test</strong>. If the control's audit fails next quarter, the risk score silently goes back up — nothing about the actual database changed, only our evidence that it's protected. This is why step 4 (Operation) and step 5 (Evidence) are not optional decoration; they are the only thing standing between "we believe we're safe" and "we know we're safe."</p>
+      </div>
+
+      <h3>Two more ideas that ride along with the chain</h3>
+
+      <h4>Inherited status ("the chain talks to itself")</h4>
+      <p>Because everything is linked, a change at step 6 doesn't just update the one box you're looking at — it ripples in both directions along every link. If the MFA control above fails its audit, that failure is visible from the Risk screen, from the SOC 2 Requirement screen, and from any Vendor Assessment that pointed at it, without anyone manually updating three different places.</p>
+
+      <h4>Control leverage ("build once, use everywhere")</h4>
+      <p>A single control — like "MFA Enforcement" — is rarely built for just one risk. In a mature GRC setup, one well-built control typically satisfies somewhere between 5 and 15 different problems at once: several risks, several compliance requirements across different frameworks, and answers to several vendor security questionnaires. This is the single biggest efficiency idea in the entire discipline: <strong>you are not managing risks and requirements one at a time — you are managing a smaller number of controls that cover many of them simultaneously.</strong></p>
+
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 3 ===================== -->
+  <section class="chapter" id="ch3">
+    <div class="chapter-head"><span class="chapter-num">03</span><h2>Organizational context</h2></div>
+    <p class="dek">Before you can track a single risk, the platform needs to know what your company actually looks like. This chapter is the "who, what, and who-with" that every later chapter will point back to.</p>
+
+    <div class="prose">
+      <p>Think of this chapter as drawing the map before you mark anything on it. Nothing here is exciting by itself — it's plumbing. But every risk, every control, and every compliance requirement you'll ever create has to point at <em>something</em>, and this chapter is where those "somethings" live.</p>
+
+      <h3>Business Units</h3>
+      <p>The departments of your company: Finance, Engineering, HR, Sales, Legal, Operations. You use these to answer "who owns this?" and to slice reports ("show me only Finance's risks").</p>
+      <div class="box example">
+        <span class="box-label">Example</span>
+        <p>Acme Corp creates Business Units: <code>Engineering</code>, <code>Finance</code>, <code>HR</code>, <code>Sales</code>, <code>Customer Success</code>.</p>
+      </div>
+
+      <h3>Business Processes</h3>
+      <p>A process is an activity that happens <em>inside</em> a business unit — a repeatable piece of work with a name. Processes sit between a Business Unit and a Risk, so you can be specific about exactly where a problem lives.</p>
+      <div class="flow">
+        <div class="node">Finance</div><div class="arrow">→</div>
+        <div class="node">Vendor Payment (process)</div><div class="arrow">→</div>
+        <div class="node risk">Risk: unauthorized supplier payment</div>
+      </div>
+      <div class="box example">
+        <span class="box-label">Example</span>
+        <p>Under <code>Engineering</code>, Acme adds the process <code>Production Deployment</code>. Under <code>Finance</code>, they add <code>Payroll Processing</code>.</p>
+      </div>
+
+      <h3>Assets</h3>
+      <p>Anything the company owns or relies on that could be affected by a risk. The most important thing to understand here is a deliberate design choice most GRC platforms make: <strong>assets are tracked at a high, category level — not as a serial-numbered inventory.</strong></p>
+      <table class="plain">
+        <tr><th>Do track it like this</th><th>Not like this</th></tr>
+        <tr><td><code>Company Laptops</code></td><td><code>MacBook‑Serial‑00113</code></td></tr>
+        <tr><td><code>AWS Infrastructure</code></td><td><code>EC2 instance i‑0a2b3c...</code></td></tr>
+        <tr><td><code>Customer Database</code></td><td><code>prod-db-cluster-3</code></td></tr>
+      </table>
+      <p>Why? Because a GRC platform is not trying to replace your IT asset-management tool (a "CMDB"). It only needs enough granularity to answer: <em>"what category of thing could this risk affect, and who's responsible for it?"</em></p>
+
+      <h3>Data Assets</h3>
+      <p>A special flavor of asset that specifically represents a category of <em>data</em> rather than a system — <code>Customer PII</code>, <code>Employee Records</code>, <code>Payment Card Data</code>, <code>Health Information</code>. These feed directly into the Data Privacy module you'll meet in Chapter 10; anything you tag as a Data Asset becomes eligible to be traced through a "data flow" (where does this data go, who touches it, where does it end up).</p>
+
+      <h3>Third Parties</h3>
+      <p>Vendors, suppliers, cloud providers, contractors, partners — anyone outside your company that your company depends on or shares data with. Each third party can carry its own risks, its own security assessments, and its own contracts.</p>
+      <div class="box example">
+        <span class="box-label">Example</span>
+        <p>Acme adds Third Parties: <code>AWS</code> (cloud infrastructure), <code>Stripe</code> (payments), <code>Zendesk</code> (support tooling). Each gets its own record with its own risk profile — AWS's risk is "infrastructure outage," Stripe's is "payment processing failure."</p>
+      </div>
+
+      <h3>Liabilities (a.k.a. Obligations)</h3>
+      <p>This is the module people most often skip early on, and it's a mistake — it's genuinely underrated. A Liability represents a <strong>legal or contractual obligation</strong> your company has taken on: a customer contract, a Data Processing Agreement (DPA), an NDA, an SLA, an insurance requirement. Liabilities can attach to an Asset, a Business Unit, or a Third Party, and they matter because obligations are often the <em>actual source</em> of a compliance requirement — not the law itself, but a specific promise you made to a specific customer.</p>
+      <div class="box example">
+        <span class="box-label">Example</span>
+        <p>Acme signs a contract with a large enterprise customer that includes a clause: "Acme will maintain SOC 2 Type II certification and notify the customer of any breach within 72 hours." That clause becomes a <strong>Liability</strong> record, and it can be linked directly to the SOC 2 compliance package and to the Incident Management process.</p>
+      </div>
+
+      <div class="box senior">
+        <span class="box-label">Senior-level insight</span>
+        <p>Most junior GRC hires treat this chapter as a one-time setup chore. Senior practitioners revisit it constantly, because a stale organizational map quietly poisons everything downstream — a risk assigned to a Business Unit that got reorganized six months ago is a risk nobody actually owns anymore. Auditing your organizational context (are these Business Units, Assets, and Third Parties still accurate?) should be its own recurring task, not a one-time data entry exercise.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 4 ===================== -->
+  <section class="chapter" id="ch4">
+    <div class="chapter-head"><span class="chapter-num">04</span><h2>Risk management</h2></div>
+    <p class="dek">This is the heart of the "R" in GRC. Here you'll learn how a vague worry becomes a scored, owned, trackable record — and how that score is supposed to move over time.</p>
+
+    <div class="prose">
+      <h3>The three flavors of risk</h3>
+      <p>Every risk in the platform is one of three types, distinguished only by <em>what it's attached to</em>. The scoring and workflow underneath is identical — this is "control leverage" applied to the risk engine itself: build one risk engine, reuse it three ways.</p>
+
+      <table class="plain">
+        <tr><th>Type</th><th>Attached to</th><th>Example</th></tr>
+        <tr><td><strong>Asset Risk</strong></td><td>An Asset</td><td>"Unauthorized access to the Customer Database"</td></tr>
+        <tr><td><strong>Third-Party Risk</strong></td><td>A Third Party (vendor)</td><td>"AWS regional outage disrupts our service"</td></tr>
+        <tr><td><strong>Business Risk</strong></td><td>A Business Unit / Process</td><td>"Unauthorized changes to payroll records"</td></tr>
+      </table>
+
+      <h3>Scoring a risk: Likelihood × Impact</h3>
+      <p>A risk isn't just a scary sentence — it gets a number, built from two independent ratings that your organization defines the scale for. A common 1–5 scale looks like this:</p>
+
+      <table class="plain">
+        <tr><th>Likelihood</th><th>Meaning</th><th>Impact</th><th>Meaning</th></tr>
+        <tr><td>1</td><td>Rare</td><td>1</td><td>Negligible</td></tr>
+        <tr><td>2</td><td>Unlikely</td><td>2</td><td>Minor</td></tr>
+        <tr><td>3</td><td>Possible</td><td>3</td><td>Moderate</td></tr>
+        <tr><td>4</td><td>Likely</td><td>4</td><td>Major</td></tr>
+        <tr><td>5</td><td>Almost certain</td><td>5</td><td>Severe</td></tr>
+      </table>
+
+      <p>Multiply the two and you get a heat-map cell. This is the classic "risk matrix" you've probably seen in a slide deck without knowing where the numbers came from:</p>
+
+      <table class="matrix">
+        <tr><th></th><th>Impact 1</th><th>Impact 2</th><th>Impact 3</th><th>Impact 4</th><th>Impact 5</th></tr>
+        <tr><th>Likelihood 5</th><td class="sev-2">5</td><td class="sev-3">10</td><td class="sev-4">15</td><td class="sev-5">20</td><td class="sev-5">25</td></tr>
+        <tr><th>Likelihood 4</th><td class="sev-1">4</td><td class="sev-2">8</td><td class="sev-3">12</td><td class="sev-4">16</td><td class="sev-5">20</td></tr>
+        <tr><th>Likelihood 3</th><td class="sev-1">3</td><td class="sev-2">6</td><td class="sev-3">9</td><td class="sev-3">12</td><td class="sev-4">15</td></tr>
+        <tr><th>Likelihood 2</th><td class="sev-1">2</td><td class="sev-1">4</td><td class="sev-2">6</td><td class="sev-2">8</td><td class="sev-3">10</td></tr>
+        <tr><th>Likelihood 1</th><td class="sev-1">1</td><td class="sev-1">2</td><td class="sev-1">3</td><td class="sev-2">4</td><td class="sev-2">5</td></tr>
+      </table>
+
+      <h3>Inherent risk vs. residual risk — the single most important pair of terms in this entire field</h3>
+      <p>You will hear these two words constantly. They are not complicated, but people new to GRC often blur them together.</p>
+
+      <div class="flow">
+        <div class="node risk"><span class="t">Inherent Risk</span><span class="s">the raw exposure, assuming NO controls exist</span></div>
+        <div class="arrow">− controls →</div>
+        <div class="node accent"><span class="t">Residual Risk</span><span class="s">what's left after your current mitigations</span></div>
+      </div>
+
+      <div class="box example">
+        <span class="box-label">Worked example</span>
+        <p>Risk: <em>Unauthorized access to the Customer Database.</em></p>
+        <p><strong>Inherent:</strong> Likelihood 4 (Likely) × Impact 5 (Severe) = <strong>20</strong> — this is how bad it would be with zero protections.</p>
+        <p>Acme then links a Control: "MFA Enforcement for database access."</p>
+        <p><strong>Residual:</strong> Likelihood 2 (Unlikely) × Impact 4 (Major) = <strong>8</strong> — this is what's left over now that MFA is in place. Note the impact barely moved (a breach is still bad if it happens) — the control mainly reduced <em>likelihood</em>.</p>
+      </div>
+
+      <p>The gap between 20 and 8 is, quite literally, <strong>the value your controls are providing.</strong> This is why residual risk — not inherent risk — is the number that goes on an executive dashboard: it answers "how exposed are we <em>right now</em>, given what we're actually doing," not "how exposed would we be if we did nothing."</p>
+
+      <h3>Risk treatment: the four responses</h3>
+      <p>Once a risk exists, you must decide how to respond. There are exactly four options, and choosing between them is a real decision with trade-offs — this is not a formality.</p>
+
+      <div class="grid-cards">
+        <div class="card"><h5>1 · Control</h5><p>You already do something that reduces this risk (technical or process-based), and you can test it. <em>Use when a working mitigation exists today.</em></p></div>
+        <div class="card"><h5>2 · Policy</h5><p>You document a rule that governs behavior around this risk. <em>Use for governance/documentation-based mitigation, often paired with a Control.</em></p></div>
+        <div class="card"><h5>3 · Project</h5><p>The mitigation doesn't exist yet, but you're building it. <em>Use when there's a real gap and a plan with a deadline.</em></p></div>
+        <div class="card"><h5>4 · Exception</h5><p>Leadership consciously accepts the exposure, for now, with a documented reason and an expiry date. <em>Use when the cost of fixing it now outweighs the exposure — but never silently.</em></p></div>
+      </div>
+
+      <div class="box watch">
+        <span class="box-label">Common junior mistake</span>
+        <p>Treating "Exception" as an escape hatch to make an ugly risk disappear from your dashboard. An Exception is not a way to avoid work — it's a way to make an accepted risk <strong>visible and time-boxed</strong>, with a named owner who will be asked about it again when it expires. A pile of Exceptions with no expiry date is a governance failure, not a management strategy.</p>
+      </div>
+
+      <h3>Ownership</h3>
+      <p>Every risk needs at least two humans attached to it, and conflating them is a common early mistake:</p>
+      <ul>
+        <li><strong>Risk Owner</strong> — usually a business or technical leader (e.g. the CTO) who is accountable for the risk existing and for deciding on treatment.</li>
+        <li><strong>GRC Contact</strong> — usually someone on the GRC/compliance team who administers the record, chases reviews, and keeps the documentation current.</li>
+      </ul>
+      <p>The Risk Owner makes the call. The GRC Contact makes sure the call gets made on schedule and gets written down properly.</p>
+
+      <h3>The review lifecycle</h3>
+      <p>A risk is not a "create once" record — it has to be periodically revisited, because likelihood, impact, and your controls all change over time. A risk review checks: is the score still accurate? Is the treatment still working? Has ownership changed?</p>
+      <p>Left unreviewed, risks silently go stale, which is why every mature platform flags them automatically:</p>
+      <div class="flow wrap-tight">
+        <div class="node warn">Review overdue</div>
+        <div class="node warn">No treatment linked</div>
+        <div class="node risk">Control failed its last audit</div>
+        <div class="node risk">Residual score above threshold</div>
+      </div>
+
+      <div class="box senior">
+        <span class="box-label">Senior-level insight</span>
+        <p>The scoring numbers themselves are almost always somewhat arbitrary — a 3 vs. a 4 on impact is a judgment call, not a physics measurement. What actually matters at a senior level is <strong>consistency of judgment across the whole register</strong> and a <strong>documented rationale</strong> for each score, so that when two risks both show "12," a board member can trust they're genuinely comparable. Calibration sessions — where risk owners jointly score a batch of risks together — are how mature GRC teams keep the numbers meaningful instead of decorative.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 5 ===================== -->
+  <section class="chapter" id="ch5">
+    <div class="chapter-head"><span class="chapter-num">05</span><h2>Compliance management</h2></div>
+    <p class="dek">This is where "we think we're secure" turns into "we can prove it against a named external standard." It reuses almost everything you just learned in Chapter 4 — that's deliberate.</p>
+
+    <div class="prose">
+      <h3>The chain: Package → Requirement → Analysis → Solution</h3>
+      <div class="flow vertical">
+        <div class="node accent"><span class="t">Compliance Package</span><span class="s">a named framework, e.g. SOC 2, ISO 27001, GDPR</span></div>
+        <div class="arrow">↓ breaks into</div>
+        <div class="node"><span class="t">Compliance Requirement</span><span class="s">one individual clause, e.g. "CC6.1 — restrict logical access"</span></div>
+        <div class="arrow">↓ goes through</div>
+        <div class="node warn"><span class="t">Compliance Analysis</span><span class="s">is this applicable to us? What satisfies it?</span></div>
+        <div class="arrow">↓ links to</div>
+        <div class="node accent"><span class="t">Solution</span><span class="s">a Control, a Policy, or (if there's a gap) a Project</span></div>
+      </div>
+
+      <h3>Packages</h3>
+      <p>A Package is a pre-built or custom-imported framework. Common ones you'll encounter constantly:</p>
+      <div class="grid-cards">
+        <div class="card"><h5>ISO 27001 / 27002</h5><p>International information security management standard.</p></div>
+        <div class="card"><h5>SOC 2</h5><p>US-centric attestation, very common gate for B2B SaaS sales deals.</p></div>
+        <div class="card"><h5>GDPR</h5><p>EU data protection law — feeds heavily into the Data Privacy module.</p></div>
+        <div class="card"><h5>NIST CSF / 800-53</h5><p>US government-origin security frameworks, widely used as a baseline.</p></div>
+        <div class="card"><h5>PCI DSS</h5><p>Required if you handle payment card data.</p></div>
+        <div class="card"><h5>HIPAA</h5><p>US healthcare data protection law.</p></div>
+      </div>
+
+      <h3>The analysis step, worked through</h3>
+      <p>For every single requirement inside a package, you go through the same two-question decision tree:</p>
+      <div class="flow">
+        <div class="node">Requirement</div><div class="arrow">→</div>
+        <div class="node warn">Applicable?</div>
+      </div>
+      <div class="box example">
+        <span class="box-label">Branch 1 — Not applicable</span>
+        <p>Requirement: "Encrypt data transmitted over public postal mail." Acme is a SaaS company that doesn't send anything by post. → Mark <strong>Not Applicable</strong>, and log a <strong>Compliance Exception</strong> with the justification "we do not use physical mail for data transfer."</p>
+      </div>
+      <div class="box example">
+        <span class="box-label">Branch 2 — Applicable</span>
+        <p>Requirement: <code>ISO 27001 A.5.15 — Access Control</code>. Acme links it to: their <code>Access Control Policy</code>, their <code>MFA Enforcement</code> control, and their <code>Quarterly Account Review</code> control. If a gap remains (say, no privileged access management yet), they also link a <code>Project: Implement PAM</code>.</p>
+      </div>
+
+      <h3>Why the Control is the "pivot," not the framework</h3>
+      <p>A tempting but weaker design is to map frameworks directly to each other: "ISO clause X = SOC clause Y." The stronger approach — and the one senior GRC practitioners insist on — is to make the <strong>Control</strong> the connecting point, because a control describes what your organization <em>actually does</em>, and frameworks are just different lenses asking about that same reality.</p>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 640 220" width="100%" height="220" role="img" aria-label="ISO and SOC requirements both point to one MFA control">
+          <line x1="120" y1="50" x2="320" y2="110" stroke="#8A93A3" stroke-width="1.5"/>
+          <line x1="520" y1="50" x2="320" y2="110" stroke="#8A93A3" stroke-width="1.5"/>
+          <line x1="320" y1="110" x2="320" y2="170" stroke="#8A93A3" stroke-width="1.5"/>
+          <rect x="30" y="20" width="180" height="55" rx="6" fill="#E7F0EE" stroke="#1F4E4B"/>
+          <text x="120" y="43" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="#1F4E4B">ISO 27001</text>
+          <text x="120" y="60" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#1F4E4B">A.5.15</text>
+          <rect x="430" y="20" width="180" height="55" rx="6" fill="#E7F0EE" stroke="#1F4E4B"/>
+          <text x="520" y="43" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="#1F4E4B">SOC 2</text>
+          <text x="520" y="60" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#1F4E4B">CC6.1</text>
+          <rect x="220" y="105" width="200" height="55" rx="6" fill="#FAF8F3" stroke="#1C2430" stroke-width="1.5"/>
+          <text x="320" y="128" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-weight="700" font-size="13" fill="#1C2430">MFA Enforcement</text>
+          <text x="320" y="146" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" font-size="11" fill="#4A5568">(the actual control)</text>
+          <rect x="230" y="170" width="180" height="34" rx="6" fill="#F7ECDC" stroke="#B9752C"/>
+          <text x="320" y="192" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#B9752C">Vendor questionnaire answer</text>
+        </svg>
+        <div class="diagram-caption">One control record answers three different external asks.</div>
+      </div>
+
+      <h3>Status inheritance — compliance is not a checkbox you tick once</h3>
+      <p>This is the idea that separates a real GRC platform from a static spreadsheet. A Compliance Requirement doesn't hold its own independent "green/red" status that a human sets by hand — it <strong>inherits</strong> the status of whatever it's linked to.</p>
+      <div class="flow">
+        <div class="node risk"><span class="t">MFA control</span><span class="s">fails its quarterly audit</span></div>
+        <div class="arrow">→</div>
+        <div class="node warn"><span class="t">ISO A.5.15</span><span class="s">automatically shows "attention required"</span></div>
+        <div class="arrow">→</div>
+        <div class="node warn"><span class="t">SOC 2 CC6.1</span><span class="s">also flagged — same control, same failure</span></div>
+      </div>
+      <p>Nobody had to remember to update three separate compliance trackers. One underlying fact — the control failed — is visible everywhere it matters, instantly.</p>
+
+      <h3>The Statement of Applicability (SoA)</h3>
+      <p>A specific, very common deliverable — especially for ISO 27001 — that's really just a formatted export of everything you did in this chapter:</p>
+      <table class="plain">
+        <tr><th>Requirement</th><th>Applicable</th><th>Control</th><th>Policy</th><th>Status</th></tr>
+        <tr><td>A.5.15 Access Control</td><td>Yes</td><td>MFA Enforcement</td><td>Access Control Policy</td><td><span class="pill ok">Met</span></td></tr>
+        <tr><td>A.5.9 Physical Mail Handling</td><td>No</td><td>—</td><td>—</td><td><span class="pill risk">N/A — Exception</span></td></tr>
+      </table>
+      <p>If you can generate that table cleanly on demand, you have essentially "passed" the administrative half of an audit before the auditor even shows up.</p>
+
+      <div class="box senior">
+        <span class="box-label">Senior-level insight</span>
+        <p>A recurring senior responsibility is deciding <strong>"efficacy," not just "existence."</strong> A requirement can have a control linked and technically be "covered" while that control is weak, manual, and rarely tested — versus a requirement covered by a strong, automated, frequently-tested control. Junior analysts often stop at "is something linked?" Senior reviewers ask "is what's linked actually good enough," and push for measuring maturity/efficacy as a separate dimension from mere linkage.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 6 ===================== -->
+  <section class="chapter" id="ch6">
+    <div class="chapter-head"><span class="chapter-num">06</span><h2>Controls</h2></div>
+    <p class="dek">The single most reused object in the entire platform. Get this module right and everything else — risk scores, compliance status, vendor answers — gets dramatically easier.</p>
+
+    <div class="prose">
+      <h3>Control vs. Policy — the distinction people blur constantly</h3>
+      <div class="flow">
+        <div class="node accent"><span class="t">Policy</span><span class="s">documentation — a written rule</span></div>
+        <div class="arrow">is not the same as</div>
+        <div class="node warn"><span class="t">Control</span><span class="s">an operational activity you can test</span></div>
+      </div>
+      <p>"We have an Access Control <strong>Policy</strong>" means: there's a document saying access should be restricted. "We enforce MFA" is a <strong>Control</strong>: something actually happens, on real systems, that you can go check right now. A policy describes intent; a control is the proof of practice. You typically want both linked to the same risk or requirement — the policy explains the rule, the control demonstrates you follow it.</p>
+
+      <h3>What a control record actually contains</h3>
+      <table class="plain">
+        <tr><th>Field</th><th>Example</th></tr>
+        <tr><td>Title</td><td>MFA Enforcement for Privileged Access</td></tr>
+        <tr><td>GRC Contact (administers the record)</td><td>Priya (GRC Analyst)</td></tr>
+        <tr><td>Control Operator (actually does the work)</td><td>IT Infrastructure Lead</td></tr>
+        <tr><td>Type</td><td>Preventive, Automated, Key control</td></tr>
+        <tr><td>Frequency</td><td>Tested quarterly</td></tr>
+      </table>
+      <p>The <strong>Preventive vs. Detective</strong> and <strong>Manual vs. Automated</strong> distinctions matter more than they look: a preventive control stops the bad thing from happening (MFA blocks unauthorized logins); a detective control notices it after the fact (a log alert on failed login attempts). Both are valuable, but an auditor — and a good risk score — will weight them differently.</p>
+
+      <h3>Testing a control: the Control Audit</h3>
+      <p>This is the "operation" and "evidence" steps from Chapter 2's core chain, applied specifically to controls.</p>
+      <div class="box example">
+        <span class="box-label">Example audit record</span>
+        <p><strong>Control:</strong> MFA Enforcement for Privileged Access</p>
+        <p><strong>Methodology:</strong> "Export the list of privileged accounts and their authentication settings from the identity provider."</p>
+        <p><strong>Success criteria:</strong> "100% of privileged accounts have MFA enabled."</p>
+        <p><strong>Schedule:</strong> Quarterly, auto-generated for the year</p>
+        <p><strong>Result this quarter:</strong> 47 of 50 privileged accounts have MFA → <span class="pill risk">Fail</span></p>
+      </div>
+      <p>Two types of audit exist: <strong>manual</strong> (a human runs the methodology and uploads evidence) and <strong>automated</strong> (a script queries the actual system — e.g. the AWS API — and reports pass/fail without a human in the loop). Automated audits are more expensive to build but essentially eliminate the risk of stale or fabricated evidence.</p>
+
+      <h3>Maintenance ≠ Audit — a distinction worth sitting with</h3>
+      <div class="flow">
+        <div class="node warn"><span class="t">Audit</span><span class="s">"does the control still work?"</span></div>
+        <div class="node"><span class="t">Maintenance</span><span class="s">"what keeps the control working?"</span></div>
+      </div>
+      <div class="box example">
+        <span class="box-label">Example</span>
+        <p><strong>Control:</strong> Endpoint Protection Software</p>
+        <p><strong>Audit:</strong> Quarterly check — is endpoint protection installed and reporting on 100% of company laptops?</p>
+        <p><strong>Maintenance:</strong> Monthly task — update the software's exclusion list as new internal tools get added, so it doesn't flag legitimate software as malware.</p>
+      </div>
+      <p>Skipping maintenance is one of the most common real-world causes of a control quietly failing its next audit.</p>
+
+      <h3>Control Issues</h3>
+      <p>When a control breaks — outside of the scheduled audit cycle, e.g. someone notices MFA got accidentally disabled for a user group — you log a <strong>Control Issue</strong>: open date, description, and (eventually) close date. This is important because an Issue can trigger the exact same downstream propagation an audit failure does: the linked Risk and Compliance Requirement both get flagged, in real time, not just at the next scheduled test.</p>
+
+      <h3>Control leverage, revisited with real numbers</h3>
+      <p>Recall from Chapter 2: one control commonly satisfies 5–15 separate "problems." Here's what that looks like concretely for Acme's MFA control:</p>
+      <div class="grid-cards">
+        <div class="card"><h5>Satisfies risks</h5><p>Unauthorized DB access, unauthorized admin panel access, unauthorized payroll system access</p></div>
+        <div class="card"><h5>Satisfies compliance</h5><p>ISO 27001 A.5.15, SOC 2 CC6.1, PCI DSS Req. 8</p></div>
+        <div class="card"><h5>Satisfies vendor asks</h5><p>Answers "Do you enforce MFA?" on every customer security questionnaire, automatically</p></div>
+      </div>
+      <p>Build the control once, test it once per quarter, and its "Pass" status quietly does the work of updating three risks, three compliance requirements, and every future vendor questionnaire that asks about MFA.</p>
+
+      <div class="box senior">
+        <span class="box-label">Senior-level insight</span>
+        <p>A mature GRC program is measured less by "how many controls exist" and more by <strong>control leverage ratio</strong> — problems covered per control. A sprawling library of 300 narrowly-scoped, rarely-reused controls is a maintenance nightmare (300 things to test, 300 things to keep evidence current for). A well-designed library of 40 well-leveraged controls covering the same ground is dramatically cheaper to operate and far less likely to silently rot. Part of a senior GRC architect's job is periodically consolidating overlapping controls.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 7 ===================== -->
+  <section class="chapter" id="ch7">
+    <div class="chapter-head"><span class="chapter-num">07</span><h2>Policies</h2></div>
+    <p class="dek">The written rulebook. Simpler conceptually than Controls, but the lifecycle discipline around it is what auditors scrutinize most closely.</p>
+    <div class="prose">
+      <h3>The family of documents</h3>
+      <table class="plain">
+        <tr><th>Type</th><th>What it is</th><th>Example</th></tr>
+        <tr><td>Policy</td><td>A high-level rule / statement of intent</td><td>Information Security Policy</td></tr>
+        <tr><td>Standard</td><td>A specific, measurable requirement under a policy</td><td>Password Standard: minimum 12 characters</td></tr>
+        <tr><td>Procedure</td><td>Step-by-step instructions to execute the standard</td><td>"How to reset a user's password"</td></tr>
+        <tr><td>Guideline</td><td>Recommended (not mandatory) practice</td><td>"Recommended browser extensions to avoid"</td></tr>
+      </table>
+
+      <h3>The review lifecycle — why policies are versioned, not edited</h3>
+      <p>When you create a policy, the platform doesn't just save a document — it creates two review records: one marking the <em>current</em> version as already-reviewed (the starting point), and one scheduled in the future for the next mandatory review. Every subsequent change flows through a new review record, rather than silently overwriting the old text.</p>
+      <div class="flow">
+        <div class="node">v1.0 — reviewed Jan 2025</div>
+        <div class="arrow">→</div>
+        <div class="node">v1.1 — reviewed Jul 2025</div>
+        <div class="arrow">→</div>
+        <div class="node warn">v1.2 — review due Jan 2026</div>
+      </div>
+      <p>Why bother? Because an auditor's question is rarely "what does the policy say today" — it's "what did the policy say on the date of the incident six months ago, and can you prove someone with authority actually reviewed it since then?" Version history is the answer to that question.</p>
+
+      <h3>Attestation — proving people actually read it</h3>
+      <p>A policy sitting in a folder that nobody has read provides almost no real protection. <strong>Attestation</strong> connects a Policy to the Awareness/training module (Chapter 14): employees are shown the policy and must click "I acknowledge," and the system records exactly who has and hasn't, with a timestamp.</p>
+      <div class="box example">
+        <span class="box-label">Example</span>
+        <p>Acme's <code>Acceptable Use Policy</code> is attached to a mandatory annual awareness cycle. HR can now answer, instantly, "has every current employee attested to this policy in the last 12 months?" — the exact question an auditor asks.</p>
+      </div>
+
+      <div class="box watch">
+        <span class="box-label">Common junior mistake</span>
+        <p>Writing an excellent, thorough policy and considering the job done. A policy that nobody has attested to, that has no review date, and that isn't linked to the risks or requirements it's meant to satisfy is functionally invisible to the rest of the system — and to an auditor.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 8 ===================== -->
+  <section class="chapter" id="ch8">
+    <div class="chapter-head"><span class="chapter-num">08</span><h2>Exceptions</h2></div>
+    <p class="dek">The formal, honest way to say "we know about this gap and we are choosing not to fix it right now" — instead of the informal, dishonest way, which is to say nothing at all.</p>
+    <div class="prose">
+      <p>Exceptions exist in three contexts, matching the three "problem" types you've already met:</p>
+      <div class="grid-cards">
+        <div class="card"><h5>Risk Exception</h5><p>Management consciously accepts a risk's exposure rather than treating it further.</p></div>
+        <div class="card"><h5>Compliance Exception</h5><p>A requirement is judged not applicable, or a known gap is formally accepted with a justification.</p></div>
+        <div class="card"><h5>Policy Exception</h5><p>A specific, temporary deviation from a documented rule, for a business reason.</p></div>
+      </div>
+
+      <div class="box example">
+        <span class="box-label">Worked example — Policy Exception</span>
+        <p><strong>Rule:</strong> Company policy prohibits USB storage devices.</p>
+        <p><strong>Business need:</strong> The research team requires an encrypted USB device to transport data to an offline lab environment.</p>
+        <p><strong>Exception record:</strong> Requester: Research Lead · Approver: CISO · Justification: "offline lab has no network connectivity" · Compensating control: device-level encryption + asset tag tracking · Expiration: 6 months, renewable on review.</p>
+      </div>
+
+      <p>Every well-formed exception has the same five ingredients — memorize this shape, it repeats everywhere:</p>
+      <ol>
+        <li><strong>Requester</strong> — who is asking for the exception</li>
+        <li><strong>Owner/Approver</strong> — who has the authority to grant it</li>
+        <li><strong>Justification</strong> — the actual business reason, in writing</li>
+        <li><strong>Compensating control (if any)</strong> — what partially offsets the accepted risk</li>
+        <li><strong>Expiration date</strong> — a hard date when it must be revisited, not left open forever</li>
+      </ol>
+
+      <div class="box senior">
+        <span class="box-label">Senior-level insight</span>
+        <p>Track exceptions as a portfolio, not just individual records. A single exception is a business decision. A hundred expired, unrenewed exceptions is a governance failure that will be the first thing a good auditor — or attacker — finds. Senior GRC leaders regularly report "open exceptions past their expiry date" as its own standing metric to leadership.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 9 ===================== -->
+  <section class="chapter" id="ch9">
+    <div class="chapter-head"><span class="chapter-num">09</span><h2>Projects &amp; findings</h2></div>
+    <p class="dek">How a known gap turns into planned, tracked, closed-out work — and how issues raised by outside eyes get formally resolved.</p>
+    <div class="prose">
+      <h3>Projects — mitigation you're building, not mitigation you have</h3>
+      <div class="flow">
+        <div class="node accent"><span class="t">Control</span><span class="s">mitigation that exists today</span></div>
+        <div class="node warn"><span class="t">Project</span><span class="s">mitigation planned for the future, with a deadline</span></div>
+      </div>
+      <div class="box example">
+        <span class="box-label">Example</span>
+        <p><strong>Risk:</strong> Credential theft leading to unauthorized access.</p>
+        <p><strong>Current mitigation (Control):</strong> MFA Enforcement.</p>
+        <p><strong>Remaining gap:</strong> Privileged accounts aren't centrally managed — anyone with admin rights can create more admins.</p>
+        <p><strong>Future mitigation (Project):</strong> "Implement Privileged Access Management (PAM)," Owner: IT Director, Deadline: Q2, Completion: 40%.</p>
+      </div>
+      <p>A project links back to the exact risks and requirements it will eventually close, which lets a senior stakeholder ask a genuinely useful question: <em>"which open projects are standing between us and SOC 2 readiness?"</em> — and get a real, linked answer instead of a guess.</p>
+
+      <h3>Findings — problems raised by someone else's eyes</h3>
+      <p>A Finding is different from a Control Issue (Chapter 6) in an important way: a Control Issue is something <em>you</em> noticed about your own control. A <strong>Finding</strong> is something an external auditor, an internal audit team, or an assessment reviewer flagged.</p>
+      <table class="plain">
+        <tr><th>Field</th><th>Example</th></tr>
+        <tr><td>Source</td><td>SOC 2 Type II external audit</td></tr>
+        <tr><td>Description</td><td>"Access review evidence for Q3 was incomplete for 2 of 5 systems."</td></tr>
+        <tr><td>Owner</td><td>IT Operations Manager</td></tr>
+        <tr><td>Deadline</td><td>30 days</td></tr>
+        <tr><td>Status</td><td><span class="pill risk">Open</span></td></tr>
+      </table>
+      <p>Findings typically link back to the specific Compliance Requirement or Assessment they came from, and they drive their own remediation — often via a Project or a quick fix to a Control's process.</p>
+
+      <div class="box junior">
+        <span class="box-label">For the fresh grad</span>
+        <p>If you remember nothing else from this chapter: <strong>a Project is proactive</strong> (you found the gap yourself and are closing it before anyone asks), and <strong>a Finding is reactive</strong> (someone else found the gap and now you must close it, usually on a stricter clock). Programs with mostly Projects and few Findings are healthier than the reverse.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 10 ===================== -->
+  <section class="chapter" id="ch10">
+    <div class="chapter-head"><span class="chapter-num">10</span><h2>Data privacy</h2></div>
+    <p class="dek">Not a GDPR checkbox — an actual map of where sensitive data goes, who touches it, and what happens to it at each stop.</p>
+    <div class="prose">
+      <h3>Data Asset → Data Flow</h3>
+      <p>You met Data Assets in Chapter 3 (a category of data, like "Employee Personal Information"). A <strong>Data Flow</strong> is one specific stage in that data's life:</p>
+      <div class="flow vertical">
+        <div class="node accent">Data Asset: Employee Personal Information</div>
+        <div class="arrow">↓</div>
+        <div class="node">Flow 1: Collected via HR onboarding portal</div>
+        <div class="arrow">↓</div>
+        <div class="node">Flow 2: Stored in Workday (HRIS)</div>
+        <div class="arrow">↓</div>
+        <div class="node">Flow 3: Transferred to payroll provider (Third Party)</div>
+        <div class="arrow">↓</div>
+        <div class="node">Flow 4: Archived after employment ends</div>
+        <div class="arrow">↓</div>
+        <div class="node">Flow 5: Deleted per retention schedule</div>
+      </div>
+      <p>Each flow is its own record — with its own risks, its own controls, its own third parties involved, and its own GDPR-specific attributes (legal basis for processing, whether it's a cross-border transfer, retention period). Stacked together, these flows are effectively a live <strong>Record of Processing Activities (RoPA)</strong> — a document GDPR explicitly requires many companies to maintain.</p>
+
+      <h3>Status inheritance, again — this time for privacy</h3>
+      <p>Just like in Chapter 5, a Data Flow inherits the health of whatever protects it.</p>
+      <div class="flow">
+        <div class="node">Data Flow: "Send employee PII to payroll processor"</div>
+        <div class="arrow">→</div>
+        <div class="node accent">Encryption-in-transit control</div>
+        <div class="arrow">→</div>
+        <div class="node risk">Control fails audit</div>
+        <div class="arrow">→</div>
+        <div class="node warn">Flow flagged as at-risk</div>
+      </div>
+
+      <div class="box example">
+        <span class="box-label">Why this matters in practice</span>
+        <p>If a regulator asks "what happens to our EU customers' data, and is it protected in transit," a properly maintained Data Flow register lets you answer with a diagram and live control status — instead of an engineer trying to reconstruct the answer from memory and Slack search.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 11 ===================== -->
+  <section class="chapter" id="ch11">
+    <div class="chapter-head"><span class="chapter-num">11</span><h2>Incident management</h2></div>
+    <p class="dek">What happens the moment "risk" stops being theoretical and something has actually gone wrong.</p>
+    <div class="prose">
+      <h3>The lifecycle</h3>
+      <div class="flow">
+        <div class="node warn">Detected</div><div class="arrow">→</div>
+        <div class="node warn">Classified</div><div class="arrow">→</div>
+        <div class="node risk">Investigated</div><div class="arrow">→</div>
+        <div class="node">Contained</div><div class="arrow">→</div>
+        <div class="node accent">Resolved / Closed</div>
+      </div>
+
+      <h3>Playbooks — don't improvise during a crisis</h3>
+      <p>A playbook is a pre-written, step-by-step response for a specific type of incident, prepared calmly in advance so nobody has to think clearly for the first time <em>while</em> something is on fire.</p>
+      <div class="box example">
+        <span class="box-label">Example: Ransomware playbook</span>
+        <ol>
+          <li>Isolate the affected device from the network</li>
+          <li>Preserve evidence (do not wipe or reboot)</li>
+          <li>Notify the Security team lead</li>
+          <li>Assess scope of data impact</li>
+          <li>Notify the Data Protection Officer if personal data is involved</li>
+          <li>Escalate to leadership per the defined severity threshold</li>
+        </ol>
+      </div>
+
+      <h3>Where incidents come from</h3>
+      <p>Incidents are frequently created automatically rather than typed in by a human — a monitoring tool detects something anomalous and creates the incident record via API, immediately, with a timestamp more reliable than "someone remembered to log it."</p>
+      <div class="flow">
+        <div class="node">SIEM / monitoring tool</div><div class="arrow">→</div>
+        <div class="node accent">API call</div><div class="arrow">→</div>
+        <div class="node warn">Incident record created</div>
+      </div>
+
+      <h3>Why incidents connect back to everything else</h3>
+      <p>A serious incident is often the moment you discover a risk was under-scored, or a control everyone assumed was working actually wasn't. A mature program feeds incident learnings back into Chapter 4 and 6: did this incident reveal a Risk we hadn't identified? Did it reveal a Control that failed silently? Closing an incident without updating the risk register is a missed opportunity to actually get safer.</p>
+
+      <div class="box senior">
+        <span class="box-label">Senior-level insight</span>
+        <p>The metric that matters most to leadership is rarely "how many incidents happened" — it's <strong>mean time to detect</strong> and <strong>mean time to contain</strong>, and whether the same root cause keeps reappearing across multiple incidents (a sign of an unaddressed systemic control gap, not bad luck).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 12 ===================== -->
+  <section class="chapter" id="ch12">
+    <div class="chapter-head"><span class="chapter-num">12</span><h2>Business continuity</h2></div>
+    <p class="dek">Not "how do we prevent bad things" (that's Chapter 4) — "if a bad thing happens anyway, how do we keep operating?"</p>
+    <div class="prose">
+      <h3>The core question</h3>
+      <p>Risk management asks "how do we stop AWS from going down." Business continuity asks the very different question: <strong>"AWS is down right now — what do we actually do in the next hour, day, and week?"</strong></p>
+
+      <h3>Key building blocks</h3>
+      <table class="plain">
+        <tr><th>Term</th><th>Meaning</th></tr>
+        <tr><td>BIA (Business Impact Analysis)</td><td>Studying which processes matter most and how fast their disruption becomes damaging</td></tr>
+        <tr><td>RTO (Recovery Time Objective)</td><td>How long can this process be down before it's unacceptable? e.g. "4 hours"</td></tr>
+        <tr><td>RPO (Recovery Point Objective)</td><td>How much data can we afford to lose? e.g. "no more than 15 minutes of transactions"</td></tr>
+        <tr><td>Continuity Plan</td><td>The actual document + assigned tasks for who does what during a disruption</td></tr>
+      </table>
+
+      <div class="box example">
+        <span class="box-label">Worked example</span>
+        <p><strong>Business Process:</strong> Customer Billing (owned by Finance)</p>
+        <p><strong>Linked Business Risk:</strong> Payment processor outage</p>
+        <p><strong>RTO:</strong> 8 hours &nbsp;·&nbsp; <strong>RPO:</strong> 1 hour</p>
+        <p><strong>Continuity Plan tasks:</strong> Who: On-call Finance Ops → What: switch to backup payment processor → When: within RTO window → How: documented runbook, tested twice yearly.</p>
+      </div>
+
+      <h3>Testing — the part that's most often skipped</h3>
+      <p>A continuity plan that has never been rehearsed is a hope, not a plan. Plans should specify test dates, a testing methodology (tabletop exercise vs. full failover drill), and success criteria, with results logged just like a control audit.</p>
+
+      <div class="box watch">
+        <span class="box-label">Common weakness in real programs</span>
+        <p>Many organizations write a beautiful continuity plan once, file it away, and never test it again. Two years later, the named "on-call lead" has left the company and the backup vendor contract has expired. Treat a Continuity Plan the same way you treat a Control: it needs recurring evidence that it still works, not a one-time creation date.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 13 ===================== -->
+  <section class="chapter" id="ch13">
+    <div class="chapter-head"><span class="chapter-num">13</span><h2>Third-party risk (vendor management)</h2></div>
+    <p class="dek">Your security is only as strong as the weakest vendor you've handed data to. This is how you actually check that, at scale, instead of trusting a sales rep's word.</p>
+    <div class="prose">
+      <h3>The vendor lifecycle</h3>
+      <div class="flow vertical">
+        <div class="node">Onboarding request</div>
+        <div class="arrow">↓</div>
+        <div class="node accent">Send Online Assessment (questionnaire)</div>
+        <div class="arrow">↓</div>
+        <div class="node warn">Score the answers</div>
+        <div class="arrow">↓</div>
+        <div class="node risk">Findings for anything concerning</div>
+        <div class="arrow">↓</div>
+        <div class="node">Remediate or accept, then approve</div>
+        <div class="arrow">↓</div>
+        <div class="node">Periodic re-assessment</div>
+      </div>
+
+      <h3>Questionnaires with conditional logic</h3>
+      <p>A good assessment doesn't ask every vendor the same 200 questions — it branches based on relevance.</p>
+      <div class="box example">
+        <span class="box-label">Example</span>
+        <p><strong>Q:</strong> Do you process personally identifiable information (PII)?</p>
+        <p>→ <strong>Yes</strong>: show a full privacy/security section (encryption, retention, breach notification terms)</p>
+        <p>→ <strong>No</strong>: skip straight to general operational-risk questions</p>
+      </div>
+
+      <h3>Scoring</h3>
+      <p>Each answer can add or subtract points toward a total vendor risk score:</p>
+      <table class="plain">
+        <tr><th>Question</th><th>Answer</th><th>Points</th></tr>
+        <tr><td>Do you enforce MFA?</td><td>Yes</td><td>+1</td></tr>
+        <tr><td>Do you encrypt data at rest?</td><td>No</td><td>−2</td></tr>
+        <tr><td>Are you SOC 2 certified?</td><td>Yes</td><td>+3</td></tr>
+      </table>
+      <p>A low total score, or a "No" on a question marked critical, automatically spawns a <strong>Finding</strong> that must be resolved — via vendor remediation or a formally accepted exception — before onboarding proceeds.</p>
+
+      <h3>Vendor tiering — not every vendor deserves the same scrutiny</h3>
+      <div class="grid-cards">
+        <div class="card"><h5>Critical vendors</h5><p>Have access to production data or systems (e.g. your cloud provider). Deep assessment, annual re-review.</p></div>
+        <div class="card"><h5>Moderate vendors</h5><p>Limited data access (e.g. an analytics tool with anonymized data). Lighter assessment.</p></div>
+        <div class="card"><h5>Low-risk vendors</h5><p>No data access at all (e.g. an office snacks supplier). Minimal or no formal assessment.</p></div>
+      </div>
+
+      <div class="box senior">
+        <span class="box-label">Senior-level insight</span>
+        <p>A vendor's own risk doesn't stop with them — it can cascade through their own vendors ("fourth-party risk"). A mature program periodically asks critical vendors who <em>their</em> critical subprocessors are, because a breach two hops away can still be your breach, contractually and reputationally.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 14 ===================== -->
+  <section class="chapter" id="ch14">
+    <div class="chapter-head"><span class="chapter-num">14</span><h2>Security awareness training</h2></div>
+    <p class="dek">Controls protect systems. This module is the control for the humans using them.</p>
+    <div class="prose">
+      <h3>What a program contains</h3>
+      <div class="grid-cards">
+        <div class="card"><h5>Content</h5><p>Text, video, or a slide walkthrough on a topic — phishing, data handling, physical security.</p></div>
+        <div class="card"><h5>Quiz</h5><p>Multiple-choice check for understanding, sometimes drawn from a randomized question pool so no two attempts look identical.</p></div>
+        <div class="card"><h5>Policy attestation</h5><p>Ties directly back to Chapter 7 — "click to confirm you've read the Acceptable Use Policy."</p></div>
+      </div>
+
+      <h3>Targeting and recurrence</h3>
+      <p>Programs go to specific audiences (all staff, or just Engineering, or just new hires during onboarding) and can run once or on a recurring cycle (e.g. annually). Reminder emails fire at set intervals — invitation, after-start nudge, non-completion nudge — because completion rates without reminders are, in practice, poor.</p>
+
+      <div class="box example">
+        <span class="box-label">Example</span>
+        <p>Acme runs an annual <em>Security Fundamentals</em> program for all staff every January: a 10-minute phishing-awareness video, a 5-question quiz drawn from a pool of 20, and attestation to the Information Security Policy. New hires get a shortened version automatically as part of onboarding.</p>
+      </div>
+
+      <p>The output that matters to an auditor isn't "we ran training" — it's a <strong>completion record per person, per cycle</strong>: exactly who finished it, when, and whether they passed the quiz. That's your evidence, in the same sense a control audit produces evidence.</p>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 15 ===================== -->
+  <section class="chapter" id="ch15">
+    <div class="chapter-head"><span class="chapter-num">15</span><h2>Access reviews (user access certification)</h2></div>
+    <p class="dek">One of the highest-value, most audit-critical modules in the entire platform — and often the most under-appreciated by newcomers.</p>
+    <div class="prose">
+      <h3>The core question</h3>
+      <p><em>"Does everyone who currently has access to a system actually still need it?"</em> People change roles, leave teams, or leave the company entirely — and their old access frequently doesn't get revoked on time. This is one of the single most common real-world sources of breaches.</p>
+
+      <h3>The pipeline</h3>
+      <div class="flow">
+        <div class="node">External system (e.g. AWS, AD)</div><div class="arrow">→</div>
+        <div class="node accent">Pull account list</div><div class="arrow">→</div>
+        <div class="node">Reviewer sees each account</div><div class="arrow">→</div>
+        <div class="node warn">Decision + Findings</div>
+      </div>
+
+      <h3>Three review types</h3>
+      <table class="plain">
+        <tr><th>Type</th><th>What it checks</th></tr>
+        <tr><td><strong>Snapshot</strong></td><td>Review every single account, top to bottom — thorough, slower.</td></tr>
+        <tr><td><strong>Differential</strong></td><td>Review only accounts that changed since the last review — fast, frequent.</td></tr>
+        <tr><td><strong>Exit</strong></td><td>Specifically hunt for accounts belonging to people no longer employed.</td></tr>
+      </table>
+
+      <div class="box example">
+        <span class="box-label">Example schedule Acme actually runs</span>
+        <p><strong>Active Directory:</strong> weekly differential review · <strong>AWS:</strong> monthly full snapshot · <strong>Accounting system:</strong> daily differential + exit review (because financial systems are especially sensitive to a departed employee retaining access).</p>
+      </div>
+
+      <h3>Reviewer decisions</h3>
+      <p>For each account, a reviewer (usually the account holder's manager or a system owner) marks: <span class="pill ok">OK</span>, <span class="pill risk">Not OK</span>, or <span class="pill policy">Unsure</span>. A "Not OK" spins off a Finding — usually "revoke this access" — with an owner and a deadline.</p>
+
+      <div class="box senior">
+        <span class="box-label">Senior-level insight</span>
+        <p>The "Exit Review" type is disproportionately important. In most breach postmortems involving insider-adjacent access, the root cause traces back to an offboarding process that revoked access from the obvious systems (email, Slack) but missed a less obvious one (a legacy admin panel, a shared cloud account). Treat exit reviews as a distinct, higher-priority workflow from routine periodic reviews — not a subset of them.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 16 ===================== -->
+  <section class="chapter" id="ch16">
+    <div class="chapter-head"><span class="chapter-num">16</span><h2>Platform mechanics</h2></div>
+    <p class="dek">The horizontal plumbing that every module you've just learned shares. This is what makes the platform feel like one product instead of fifteen bolted-together tools.</p>
+    <div class="prose">
+
+      <h3>Views — your saved filters</h3>
+      <p>A View is a saved combination of filter + sort + visible columns, reusable the way a saved search or a Jira filter is. Instead of re-building "all risks with residual score above 15, owned by Engineering" every time, you save it once as a View called <code>Critical Engineering Risks</code> and revisit it with one click — or schedule it to email itself to you every Monday.</p>
+
+      <h3>The dynamic status engine — the platform's real brain</h3>
+      <p>Instead of hardcoding every possible status, you write conditional rules:</p>
+      <div class="box example">
+        <span class="box-label">Example rules</span>
+        <p><code>IF residual_score > 15 THEN status = "Critical"</code></p>
+        <p><code>IF review_date < today THEN status = "Review Overdue"</code></p>
+        <p><code>IF linked_control.last_audit = "Fail" THEN status = "Attention Required"</code></p>
+      </div>
+      <p>Statuses aren't just cosmetic labels — they're what drives filtering, notifications, and reporting group-by's throughout the platform. And, as you learned in Chapters 5, 6, and 10, statuses <strong>propagate</strong>: a status set on a Control can surface on every Risk and Requirement linked to it, automatically.</p>
+
+      <h3>Notifications</h3>
+      <p>Three broad families:</p>
+      <div class="grid-cards">
+        <div class="card"><h5>Warnings</h5><p>"Risk review due," "Audit failed," "Exception expiring" — triggered by deadlines or status changes.</p></div>
+        <div class="card"><h5>Scheduled reports</h5><p>A saved View, emailed automatically on a cadence — "Failed controls, every Monday 8am."</p></div>
+        <div class="card"><h5>Collaboration</h5><p>Comment added, attachment uploaded, review completed.</p></div>
+      </div>
+
+      <h3>Reporting: three shapes</h3>
+      <table class="plain">
+        <tr><th>Type</th><th>Scope</th><th>Example</th></tr>
+        <tr><td>Item report</td><td>One single record</td><td>A full PDF write-up of one specific risk</td></tr>
+        <tr><td>Section report</td><td>The whole module</td><td>"Risk portfolio by severity and department"</td></tr>
+        <tr><td>Dashboard</td><td>Cross-module landing page</td><td>Executive summary widget board</td></tr>
+      </table>
+
+      <h3>Access control: two separate questions</h3>
+      <p>Permissions in a GRC platform are genuinely two different axes, and conflating them causes real security mistakes:</p>
+      <div class="flow">
+        <div class="node warn"><span class="t">What can you click?</span><span class="s">feature/action permissions — e.g. "can edit risks"</span></div>
+        <div class="node accent"><span class="t">What data can you see?</span><span class="s">ownership-based visibility — e.g. "only Finance's records"</span></div>
+      </div>
+      <div class="box example">
+        <span class="box-label">Example</span>
+        <p>An external auditor gets an account that can <em>view</em> everything (read-only click permissions) but cannot edit anything. A Finance team member might be able to <em>edit</em> risks generally, but only <em>see</em> risks owned by their own department.</p>
+      </div>
+
+      <h3>API, webhooks, and automation</h3>
+      <p>Two directions of integration:</p>
+      <div class="flow">
+        <div class="node">External system → API → creates a record in the platform</div>
+      </div>
+      <div class="flow">
+        <div class="node">Platform → Webhook → notifies an external system</div>
+      </div>
+      <div class="box example">
+        <span class="box-label">Examples</span>
+        <p><strong>Inbound:</strong> your SIEM detects an anomaly and creates an Incident record via API, automatically.</p>
+        <p><strong>Outbound:</strong> a new remediation Project gets created, and a webhook automatically opens a matching ticket in Jira.</p>
+      </div>
+      <p>Automation goes a level further: instead of a human manually checking "is S3 encryption still on," a scheduled script queries the AWS API directly and updates the relevant Control Audit's pass/fail result with zero human involvement — turning a point-in-time manual check into continuous, always-current assurance.</p>
+
+      <h3>AI / natural-language querying (MCP)</h3>
+      <p>The newest layer in modern GRC platforms: an AI assistant can be connected to query your GRC data in plain English — respecting the exact same permissions a human user would have. Example questions: <em>"Which risks overlap across these two business units?" "Is this policy actually implemented and tested?" "Chart our open findings by owner."</em> This doesn't replace the modules above; it's a faster way to ask questions of the graph you've already built.</p>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 17 ===================== -->
+  <section class="chapter" id="ch17">
+    <div class="chapter-head"><span class="chapter-num">17</span><h2>The full graph — putting it all together</h2></div>
+    <p class="dek">Every chapter so far has been one slice of the graph. Here is the whole thing, in one picture, and one worked story that touches nearly every module you've learned.</p>
+    <div class="prose">
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 900 620" width="100%" height="620" role="img" aria-label="Full GRC relationship graph">
+          <!-- context row -->
+          <rect x="30" y="20" width="840" height="70" rx="8" fill="#E7F0EE" stroke="#1F4E4B"/>
+          <text x="450" y="45" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="13" fill="#1F4E4B">ORGANIZATIONAL CONTEXT</text>
+          <text x="450" y="65" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#1F4E4B">Business Units · Processes · Assets · Data Assets · Third Parties · Liabilities</text>
+
+          <line x1="450" y1="90" x2="450" y2="120" stroke="#8A93A3" stroke-width="1.5"/>
+
+          <!-- problem row -->
+          <rect x="60" y="120" width="230" height="60" rx="8" fill="#F5E5E2" stroke="#A6423A"/>
+          <text x="175" y="145" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="12" fill="#A6423A">RISK</text>
+          <text x="175" y="162" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#A6423A">Asset / Vendor / Business</text>
+
+          <rect x="335" y="120" width="230" height="60" rx="8" fill="#F5E5E2" stroke="#A6423A"/>
+          <text x="450" y="145" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="12" fill="#A6423A">COMPLIANCE REQUIREMENT</text>
+          <text x="450" y="162" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#A6423A">from a Package (ISO, SOC2...)</text>
+
+          <rect x="610" y="120" width="230" height="60" rx="8" fill="#F5E5E2" stroke="#A6423A"/>
+          <text x="725" y="145" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="12" fill="#A6423A">DATA FLOW</text>
+          <text x="725" y="162" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#A6423A">from a Data Asset</text>
+
+          <line x1="175" y1="180" x2="450" y2="230" stroke="#8A93A3" stroke-width="1.5"/>
+          <line x1="450" y1="180" x2="450" y2="230" stroke="#8A93A3" stroke-width="1.5"/>
+          <line x1="725" y1="180" x2="450" y2="230" stroke="#8A93A3" stroke-width="1.5"/>
+
+          <!-- solution row -->
+          <rect x="130" y="230" width="180" height="55" rx="8" fill="#FAF8F3" stroke="#1C2430" stroke-width="1.5"/>
+          <text x="220" y="262" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="12" fill="#1C2430">CONTROL</text>
+
+          <rect x="360" y="230" width="180" height="55" rx="8" fill="#FAF8F3" stroke="#1C2430" stroke-width="1.5"/>
+          <text x="450" y="262" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="12" fill="#1C2430">POLICY</text>
+
+          <rect x="590" y="230" width="180" height="55" rx="8" fill="#FAF8F3" stroke="#1C2430" stroke-width="1.5"/>
+          <text x="680" y="262" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="12" fill="#1C2430">PROJECT / EXCEPTION</text>
+
+          <line x1="220" y1="285" x2="220" y2="320" stroke="#8A93A3" stroke-width="1.5"/>
+
+          <!-- operation/evidence row -->
+          <rect x="100" y="320" width="240" height="55" rx="8" fill="#F7ECDC" stroke="#B9752C"/>
+          <text x="220" y="345" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="12" fill="#B9752C">CONTROL AUDIT</text>
+          <text x="220" y="362" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#B9752C">methodology + schedule</text>
+
+          <line x1="220" y1="375" x2="220" y2="410" stroke="#8A93A3" stroke-width="1.5"/>
+
+          <rect x="100" y="410" width="240" height="55" rx="8" fill="#E6EFE7" stroke="#3E7A4C"/>
+          <text x="220" y="435" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="12" fill="#3E7A4C">EVIDENCE</text>
+          <text x="220" y="452" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#3E7A4C">screenshot, export, log</text>
+
+          <line x1="220" y1="465" x2="220" y2="500" stroke="#8A93A3" stroke-width="1.5"/>
+
+          <rect x="60" y="500" width="320" height="55" rx="8" fill="#FAF8F3" stroke="#1C2430" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <text x="220" y="525" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="12" fill="#1C2430">DYNAMIC STATUS</text>
+          <text x="220" y="542" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#1C2430">Pass / Fail → propagates back up</text>
+
+          <path d="M 380 520 C 500 520, 500 160, 175 160" fill="none" stroke="#A6423A" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+          <path d="M 380 528 C 560 560, 560 160, 450 160" fill="none" stroke="#A6423A" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#A6423A"/>
+            </marker>
+          </defs>
+
+          <rect x="560" y="500" width="320" height="90" rx="8" fill="#FAF8F3" stroke="#8A93A3"/>
+          <text x="720" y="522" text-anchor="middle" font-family="IBM Plex Sans" font-weight="700" font-size="12" fill="#1C2430">ASSURANCE LAYER</text>
+          <text x="720" y="542" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#4A5568">Findings · Assessments · Awareness</text>
+          <text x="720" y="558" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#4A5568">Access Reviews · BCP Tests</text>
+          <text x="720" y="574" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#4A5568">all feed the same status engine</text>
+        </svg>
+        <div class="diagram-caption">The dashed red line is status propagation: a failed audit travels back up to every Risk and Requirement it touches.</div>
+      </div>
+
+      <h3>One story, touching almost every chapter</h3>
+      <p>Let's run the whole graph as a single narrative, the way it would actually unfold at Acme Corp over a year.</p>
+      <ol>
+        <li><strong>Context (Ch. 3):</strong> Acme onboards a new vendor, <code>DataCo</code>, to process customer emails.</li>
+        <li><strong>Vendor risk assessment (Ch. 13):</strong> DataCo fills out a security questionnaire. They answer "No" to "do you encrypt data at rest" — a critical question. A <strong>Finding</strong> is created automatically.</li>
+        <li><strong>Liability (Ch. 3):</strong> The contract with DataCo includes a DPA requiring breach notification within 72 hours — logged as a Liability.</li>
+        <li><strong>Data flow (Ch. 10):</strong> A Data Flow is created: "Customer emails → DataCo for processing," linked to DataCo and to the relevant risk.</li>
+        <li><strong>Risk (Ch. 4):</strong> A new Third-Party Risk is opened: "Unencrypted data at rest at DataCo." Inherent score: high.</li>
+        <li><strong>Treatment (Ch. 4 &amp; 9):</strong> DataCo commits to fixing it in 60 days — logged as a <strong>Project</strong> with a deadline, not a Control (because the fix doesn't exist yet).</li>
+        <li><strong>Compliance (Ch. 5):</strong> This risk is also relevant to Acme's SOC 2 vendor-management requirement — linked so the requirement shows "gap, remediation in progress" rather than silently green.</li>
+        <li><strong>Control audit (Ch. 6):</strong> 60 days later, Acme re-tests: DataCo now encrypts at rest. The Project closes, a new Control ("DataCo encryption verified quarterly") is created and passes its first audit.</li>
+        <li><strong>Status propagation (Ch. 16):</strong> The Risk's residual score drops. The SOC 2 requirement flips to "met." The Data Flow shows healthy.</li>
+        <li><strong>Assurance (Ch. 14 &amp; 15):</strong> Meanwhile, unrelated but in parallel, Acme's quarterly access review (Ch. 15) catches a departed employee who still has access to the vendor management tool — a Finding is opened and closed within a week.</li>
+        <li><strong>Reporting (Ch. 16):</strong> At quarter-end, the CISO pulls the "Vendor Risk" dashboard View and reports to the board: one vendor risk closed, zero open findings past deadline, SOC 2 readiness at 96%.</li>
+      </ol>
+      <p>Nothing in that story required a single spreadsheet. Every step referenced a record that already existed, updated a status that propagated automatically, and left behind evidence that will still be retrievable in three years when the next audit happens.</p>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 18 ===================== -->
+  <section class="chapter" id="ch18">
+    <div class="chapter-head"><span class="chapter-num">18</span><h2>A day in the life, at three levels of seniority</h2></div>
+    <p class="dek">The same platform looks like a completely different job depending on your seniority. Here's the same event — a failed control audit — seen through three sets of eyes.</p>
+    <div class="prose">
+
+      <div class="quote-role">
+        <div class="avatar" style="background:var(--green);">J</div>
+        <div>
+          <div class="role">GRC Analyst (Junior) <span>· first 6 months</span></div>
+          <p>"The MFA control failed its quarterly audit — 3 privileged accounts didn't have MFA enabled. I'm opening a Control Issue, tagging the IT Infrastructure Lead as owner, and setting a 5-day remediation deadline. I'll follow up daily until it's fixed, then re-run the audit to confirm and close it out."</p>
+        </div>
+      </div>
+
+      <div class="quote-role">
+        <div class="avatar" style="background:var(--teal-deep);">M</div>
+        <div>
+          <div class="role">GRC Manager (Mid/Senior) <span>· 3–6 years</span></div>
+          <p>"This is the second time this control has failed this year — both times because new admin accounts were created without MFA enforced by default at creation. That's a process problem, not a one-off mistake. I'm opening a Project to fix the account-provisioning workflow itself, not just remediating the symptom again. I also need to check: does this control's failure affect our SOC 2 attestation window that closes next month?"</p>
+        </div>
+      </div>
+
+      <div class="quote-role">
+        <div class="avatar" style="background:var(--red);">S</div>
+        <div>
+          <div class="role">Head of GRC / CISO (Senior/Super Senior) <span>· 8+ years</span></div>
+          <p>"I'm less interested in this one control failure than in what it says about our control leverage strategy. If MFA enforcement is a single point of failure covering fifteen risks and three frameworks, its provisioning process needs the same engineering rigor as a production system — automated testing, not quarterly manual spot-checks. I'm allocating budget to automate this control's audit entirely, and I want a portfolio-level view: which of our other 'key' controls have the same single-point-of-failure exposure?"</p>
+        </div>
+      </div>
+
+      <p>Notice the pattern: junior work is <strong>correct execution of the process</strong> (open the record, chase the fix, close it out). Mid-level work is <strong>pattern recognition across time</strong> (this keeps happening — why?). Senior work is <strong>systemic and architectural</strong> (how do we change the design so this class of failure becomes structurally less likely, across the whole program, not just this one control).</p>
+
+      <div class="box junior">
+        <span class="box-label">If you're starting out</span>
+        <p>Don't skip the "junior" stage by trying to think like the CISO on day one. The pattern recognition and systemic thinking above are built <em>from</em> hundreds of hours of correctly executing the boring, precise, unglamorous version first. You cannot spot "this keeps happening" until you've personally closed out enough individual instances to recognize the shape.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 19 ===================== -->
+  <section class="chapter" id="ch19">
+    <div class="chapter-head"><span class="chapter-num">19</span><h2>Glossary</h2></div>
+    <p class="dek">Every term used in this manual, in one place, for quick lookup.</p>
+    <div class="prose">
+      <dl>
+        <div class="glossary-item"><dt>Asset</dt><dd>A category-level thing the company owns or relies on (e.g. "Customer Database"), tracked broadly rather than as a serialized inventory.</dd></div>
+        <div class="glossary-item"><dt>Attestation</dt><dd>A recorded acknowledgment that a specific person has read and agrees to a policy.</dd></div>
+        <div class="glossary-item"><dt>Business Unit</dt><dd>An organizational department, used for ownership and reporting.</dd></div>
+        <div class="glossary-item"><dt>Compliance Analysis</dt><dd>The process of deciding whether a requirement applies to you, and what satisfies it.</dd></div>
+        <div class="glossary-item"><dt>Compliance Package</dt><dd>A named external framework (ISO 27001, SOC 2, GDPR) broken into individual requirements.</dd></div>
+        <div class="glossary-item"><dt>Control</dt><dd>An operational activity that mitigates a risk or satisfies a requirement, and that can be tested.</dd></div>
+        <div class="glossary-item"><dt>Control Audit</dt><dd>A scheduled test of a control against a methodology and success criteria, producing a pass/fail result.</dd></div>
+        <div class="glossary-item"><dt>Control Issue</dt><dd>An unscheduled report that a control has broken, outside the normal audit cycle.</dd></div>
+        <div class="glossary-item"><dt>Control Leverage</dt><dd>The principle that one well-built control should satisfy many risks and requirements at once.</dd></div>
+        <div class="glossary-item"><dt>Data Flow</dt><dd>One specific stage in a data asset's life (collection, storage, transfer, deletion), with its own risk/control links.</dd></div>
+        <div class="glossary-item"><dt>Dynamic Status</dt><dd>A status computed from a rule ("IF condition THEN label") rather than manually set, that can propagate across linked records.</dd></div>
+        <div class="glossary-item"><dt>Evidence</dt><dd>Proof that an operation actually happened — a screenshot, export, log, or signature.</dd></div>
+        <div class="glossary-item"><dt>Exception</dt><dd>A formal, time-boxed, justified acceptance of a known risk, compliance gap, or policy deviation.</dd></div>
+        <div class="glossary-item"><dt>Finding</dt><dd>A problem identified by an external party (auditor, assessor) requiring remediation.</dd></div>
+        <div class="glossary-item"><dt>Impact</dt><dd>How bad a risk would be if it occurred — one half of the risk score.</dd></div>
+        <div class="glossary-item"><dt>Inherent Risk</dt><dd>The raw exposure of a risk assuming no controls exist at all.</dd></div>
+        <div class="glossary-item"><dt>Liability</dt><dd>A legal or contractual obligation the company has taken on (contract, DPA, SLA).</dd></div>
+        <div class="glossary-item"><dt>Likelihood</dt><dd>How probable a risk is to occur — the other half of the risk score.</dd></div>
+        <div class="glossary-item"><dt>Maintenance</dt><dd>Recurring upkeep required to keep a control working, distinct from testing whether it works.</dd></div>
+        <div class="glossary-item"><dt>Policy</dt><dd>Written documentation of a rule, distinct from a Control, which is the operational proof of following it.</dd></div>
+        <div class="glossary-item"><dt>Project</dt><dd>Planned future mitigation work with a deadline, used when a control doesn't yet exist.</dd></div>
+        <div class="glossary-item"><dt>Residual Risk</dt><dd>What's left of a risk after current controls are applied — the number that matters most day-to-day.</dd></div>
+        <div class="glossary-item"><dt>RoPA</dt><dd>Record of Processing Activities — a GDPR-driven register of how personal data moves through the company; effectively the sum of all Data Flows.</dd></div>
+        <div class="glossary-item"><dt>RTO / RPO</dt><dd>Recovery Time/Point Objective — how long a process can be down, and how much data loss is tolerable, during a disruption.</dd></div>
+        <div class="glossary-item"><dt>SoA (Statement of Applicability)</dt><dd>A formatted export listing every compliance requirement, its applicability, its linked control/policy, and its status.</dd></div>
+        <div class="glossary-item"><dt>Status Inheritance / Propagation</dt><dd>The behavior where a status change in one record (e.g. a failed control) automatically surfaces in every linked record (risks, requirements, data flows).</dd></div>
+        <div class="glossary-item"><dt>Third Party</dt><dd>Any external vendor, supplier, or partner the company depends on or shares data with.</dd></div>
+        <div class="glossary-item"><dt>View</dt><dd>A saved combination of filter, sort, and columns, reusable across the platform like a saved search.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 20 ===================== -->
+  <section class="chapter" id="ch20">
+    <div class="chapter-head"><span class="chapter-num">20</span><h2>Career roadmap: junior to super senior</h2></div>
+    <p class="dek">What actually changes about your job as you grow in this field — not just title inflation, but a genuine shift in what you're responsible for.</p>
+    <div class="prose">
+
+      <div class="roadmap-row">
+        <div class="stage">GRC Analyst<span class="yrs">Year 0–2</span></div>
+        <div>
+          <p><strong>What you own:</strong> Executing the process correctly. Opening and closing risks, running scheduled control audits, chasing evidence from control operators, keeping the compliance analysis current as requirements are added.</p>
+          <p><strong>What "good" looks like:</strong> Nothing falls through the cracks. Deadlines are met. Records are complete and well-documented, not just technically closed.</p>
+          <p><strong>Skill to build:</strong> Fluency in every module in this manual — you should be able to explain, from memory, what distinguishes a Control from a Policy, and a Project from an Exception, to someone newer than you.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-row">
+        <div class="stage">Senior Analyst / GRC Manager<span class="yrs">Year 2–6</span></div>
+        <div>
+          <p><strong>What you own:</strong> Pattern recognition across time and across records. Noticing that the same control keeps failing, that a class of vendor keeps producing the same finding, that exceptions in one department never get renewed on time.</p>
+          <p><strong>What "good" looks like:</strong> Fewer repeat problems. Proactive projects instead of reactive findings. You start designing new controls and questionnaires, not just operating existing ones.</p>
+          <p><strong>Skill to build:</strong> Control leverage thinking — actively looking for a way to design one control that closes three gaps instead of building three narrow ones. Comfort talking to engineers about automating a manual audit.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-row">
+        <div class="stage">Head of GRC / Director<span class="yrs">Year 6–10</span></div>
+        <div>
+          <p><strong>What you own:</strong> Program architecture. Which frameworks to pursue and in what order. Where to invest in automation vs. accept manual process. How the org's risk appetite is set and communicated. Vendor and budget decisions for GRC tooling itself.</p>
+          <p><strong>What "good" looks like:</strong> The board trusts the numbers you present because the underlying evidence trail is airtight. Audits become confirmatory events, not fire drills. New compliance frameworks can be onboarded in weeks, not quarters, because your control library is already well-leveraged.</p>
+          <p><strong>Skill to build:</strong> Translating technical risk into business language for non-technical executives, and translating business risk appetite back into concrete technical requirements for engineering.</p>
+        </div>
+      </div>
+
+      <div class="roadmap-row">
+        <div class="stage">CISO / VP, or GRC Platform Architect<span class="yrs">Year 10+</span></div>
+        <div>
+          <p><strong>What you own:</strong> Whether GRC is treated as a cost center that slows the business down, or as genuine infrastructure that lets the business move faster and win bigger deals with confidence. At the platform-architecture end of this track, you may be the person <em>designing</em> the GRC software itself — deciding whether it should be graph-native, how status propagation should work, what the object model looks like underneath every module in this manual.</p>
+          <p><strong>What "good" looks like:</strong> GRC is invisible when it's working. Deals close faster because security questionnaires answer themselves from an evidence library. Incidents are rare, and when they happen, the postmortem finds a known, already-tracked residual risk — not a total surprise.</p>
+          <p><strong>Skill to build:</strong> Systems thinking at the level of an entire industry — knowing not just your own company's graph, but how continuous-assurance tooling, AI agents, and regulatory change are reshaping what "good" even means, and building toward that instead of today's baseline.</p>
+        </div>
+      </div>
+
+      <div class="box example">
+        <span class="box-label">The throughline across every level</span>
+        <p>At every single stage, the underlying seven-step chain from Chapter 2 never changes: <strong>Context → Problem → Solution → Operation → Evidence → Status → Posture.</strong> What changes is the scale you operate at — one record, a pattern across many records, a whole program, or an entire industry's approach to the problem. Master the chain early, and every promotion after that is really just widening your lens on the exact same idea.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="end">
+    <p>The GRC Field Manual — written as a single connected curriculum rather than a glossary, because the whole point of this discipline is that nothing in it stands alone.</p>
+  </footer>
+
+</main>
+</div>
+</body>
+</html>
